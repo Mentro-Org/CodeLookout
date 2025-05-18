@@ -5,7 +5,7 @@ import (
 
 	"github.com/Mentro-Org/CodeLookout/internal/config"
 	ghclient "github.com/Mentro-Org/CodeLookout/internal/github"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v72/github"
 )
 
 type PullRequestHandler interface {
@@ -13,5 +13,12 @@ type PullRequestHandler interface {
 }
 
 type ReviewAction interface {
-	Execute(ctx context.Context, event *github.PullRequestEvent, cfg *config.Config, ghClientFactory *ghclient.ClientFactory) error
+	Execute(reviewCtx *ReviewContext) error
+}
+
+type ReviewContext struct {
+	Ctx             context.Context
+	Event           *github.PullRequestEvent
+	Cfg             *config.Config
+	GHClientFactory *ghclient.ClientFactory
 }

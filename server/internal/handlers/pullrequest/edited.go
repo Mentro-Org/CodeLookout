@@ -7,7 +7,7 @@ import (
 	ghclient "github.com/Mentro-Org/CodeLookout/internal/github"
 	"github.com/Mentro-Org/CodeLookout/internal/llm"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v72/github"
 )
 
 type PullRequestEditedHandler struct {

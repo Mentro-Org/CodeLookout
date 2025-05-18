@@ -1,22 +1,22 @@
 package review
 
 import (
-	"context"
 	"log"
 
-	"github.com/Mentro-Org/CodeLookout/internal/config"
-	ghclient "github.com/Mentro-Org/CodeLookout/internal/github"
-	"github.com/google/go-github/github"
+	"github.com/Mentro-Org/CodeLookout/internal/core"
+	"github.com/google/go-github/v72/github"
 )
 
 type GeneralComment struct {
 	Message string
 }
 
-func (gc *GeneralComment) Execute(ctx context.Context, event *github.PullRequestEvent, cfg *config.Config, ghClientFactory *ghclient.ClientFactory) error {
+func (gc *GeneralComment) Execute(reviewCtx *core.ReviewContext) error {
+	event := reviewCtx.Event
+	ctx := reviewCtx.Ctx
 	log.Printf("Received a pull request event for #%d\n", event.GetNumber())
 
-	client, err := ghClientFactory.GetClient(ctx, event.GetInstallation().GetID())
+	client, err := reviewCtx.GHClientFactory.GetClient(ctx, event.GetInstallation().GetID())
 	if err != nil {
 		return err
 	}

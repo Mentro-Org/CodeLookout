@@ -1,22 +1,24 @@
 package review
 
 import (
-	"context"
+	"fmt"
 	"log"
 
-	"github.com/Mentro-Org/CodeLookout/internal/config"
-	ghclient "github.com/Mentro-Org/CodeLookout/internal/github"
-	"github.com/google/go-github/github"
+	"github.com/Mentro-Org/CodeLookout/internal/core"
+	"github.com/google/go-github/v72/github"
 )
 
 type InlineComment struct {
-	Body     string
-	Path     string // file path
-	Position int    // line number or position in diff
+	Body      string
+	Path      string // file path
+	StartLine int    // starting line in the diff
+	Line      int    // ending line in the diff
 }
 
-func (ic *InlineComment) Execute(ctx context.Context, event *github.PullRequestEvent, cfg *config.Config, ghClientFactory *ghclient.ClientFactory) error {
-	client, err := ghClientFactory.GetClient(ctx, event.GetInstallation().GetID())
+func (ic *InlineComment) Execute(reviewCtx *core.ReviewContext) error {
+	event := reviewCtx.Event
+	ctx := reviewCtx.Ctx
+	client, err := reviewCtx.GHClientFactory.GetClient(ctx, event.GetInstallation().GetID())
 	if err != nil {
 		return err
 	}
@@ -24,10 +26,20 @@ func (ic *InlineComment) Execute(ctx context.Context, event *github.PullRequestE
 	commitSHA := event.GetPullRequest().GetHead().GetSHA()
 
 	comment := &github.PullRequestComment{
-		Body:     github.String(ic.Body),
-		CommitID: github.String(commitSHA),
-		Path:     github.String(ic.Path),
-		Position: github.Int(ic.Position),
+		Body:     github.Ptr(ic.Body),
+		CommitID: github.Ptr(commitSHA),
+		Path:     github.Ptr(ic.Path),
+	}
+
+	// single-line comment
+	if ic.StartLine == ic.Line {
+		comment.Line = github.Ptr(ic.Line)
+	} else if ic.StartLine < ic.Line {
+		// multi-line comment
+		comment.StartLine = github.Ptr(ic.StartLine)
+		comment.Line = github.Ptr(ic.Line)
+	} else {
+		return fmt.Errorf("start_line (%d) must be less than or equal to line (%d)", ic.StartLine, ic.Line)
 	}
 
 	_, _, err = client.PullRequests.CreateComment(ctx,
@@ -38,7 +50,7 @@ func (ic *InlineComment) Execute(ctx context.Context, event *github.PullRequestE
 	)
 
 	if err != nil {
-		log.Printf("Failed to create inline comment: %v\n", err)
+		log.Printf("Failed to create inlmulti-line inline comment: %v\n", err)
 	}
 	return err
 }

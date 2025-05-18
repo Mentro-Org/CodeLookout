@@ -1,0 +1,222 @@
+## PR Metadata
+- **Title**: add basic core logic for github app and local tunneling
+- **Description**: This PR is created to test [github app ](https://github.com/satyajitnayk/code-reviewer) working or not
+
+## Objective
+Provide structured review feedback based on the following file diffs. The feedback will be used to generate review comments in GitHub.
+
+## Output JSON Format:
+{
+  "summary": "High-level review summary (optional)",
+  "action": "COMMENT | APPROVE | REQUEST_CHANGES",
+  "comments": [
+    {
+      "path": "file/path.go",
+      "comments": [
+        {
+          "line": { "s": 12, "e": 14 },
+          "body": "Feedback for this line range",
+          "category": ["security", "performance"]
+        },
+        {
+          "line": { "s": 30, "e": 30 },
+          "body": "Single-line comment",
+          "category": ["style"]
+        }
+      ]
+    }
+  ]
+}
+
+- Use { "s": x, "e": y } to represent line ranges. If it's one line, make s == e.
+- Categories can include: "security", "performance", "bug", "style", "readability", "lint", etc.
+- Be concise, helpful, and professional.
+
+
+
+---
+**File**: .gitignore
+**Patch**:
+@@ -0,0 +1,3 @@
++.env
++.keys/
++*.pem
+\ No newline at end of file
+
+---
+**File**: README.md
+**Patch**:
+@@ -1 +1,9 @@
+-# code-reviewer
+\ No newline at end of file
++# code-reviewer
++
++## Run the shell script run.sh
++
++> It will forward webhook payload to local api and run local server.
++
++
+shell
++./run.sh
++
+
+
+---
+**File**: dev.env
+**Patch**:
+@@ -0,0 +1,5 @@
++TARGET_URL="http://localhost:3000/api/webhook"
++WEBHOOK_URL="https://smee.io/XXXXXX"
++APP_ID="XXXXX"
++WEBHOOK_SECRET="XXXX-XXXXX-XXXX"
++PRIVATE_KEY_PATH="YOUR_PRIVATE_KEY_PATH"
+
+---
+**File**: main.go
+**Patch**:
+@@ -0,0 +1,109 @@
++package main
++
++import (
++       "context"
++       "fmt"
++       "log"
++       "net/http"
++       "os"
++       "strconv"
++
++       "github.com/bradleyfalzon/ghinstallation/v2"
++       "github.com/go-chi/chi/v5"
++       "github.com/go-chi/chi/v5/middleware"
++       "github.com/google/go-github/v55/github"
++       "github.com/joho/godotenv"
++)
++
++var (
++       messageForNewPRs = "Thanks for opening a new PR! Please follow our contributing guidelines to make your PR easier to review."
++       webhookSecret    []byte
++       appID            int64
++       privateKey       []byte
++)
++
++func main() {
++       // Load environment variables
++       err := godotenv.Load()
++       if err != nil {
++               log.Fatal("Error loading .env file")
++       }
++
++       // Parse APP_ID
++       appIDParsed, err := strconv.ParseInt(os.Getenv("APP_ID"), 10, 64)
++       if err != nil {
++               log.Fatalf("Invalid APP_ID: %v", err)
++       }
++       appID = appIDParsed
++
++       // Read private key
++       privateKeyPEM, err := os.ReadFile(os.Getenv("PRIVATE_KEY_PATH"))
++       if err != nil {
++               log.Fatalf("Failed to read private key: %v", err)
++       }
++
++       privateKey = privateKeyPEM
++
++       webhookSecret = []byte(os.Getenv("WEBHOOK_SECRET"))
++
++       // Setup router
++       r := chi.NewRouter()
++       r.Use(middleware.Logger)
++       r.Post("/api/webhook", webhookHandler)
++
++       // Start server
++       fmt.Println("Server is listening at http://localhost:3000/api/webhook")
++       log.Fatal(http.ListenAndServe(":3000", r))
++}
++
++func webhookHandler(w http.ResponseWriter, r *http.Request) {
++       payload, err := github.ValidatePayload(r, webhookSecret)
++       if err != nil {
++               http.Error(w, "Invalid payload signature", http.StatusUnauthorized)
++               return
++       }
++
++       event, err := github.ParseWebHook(github.WebHookType(r), payload)
++       if err != nil {
++               http.Error(w, "Could not parse webhook", http.StatusBadRequest)
++               return
++       }
++
++       switch e := event.(type) {
++       case *github.PullRequestEvent:
++               if *e.Action == "opened" {
++                       go handlePullRequestOpened(e)
++               }
++       default:
++               fmt.Fprintf(w, "Event type %T not handled\n", e)
++       }
++
++       w.WriteHeader(http.StatusOK)
++}
++
++func handlePullRequestOpened(event *github.PullRequestEvent) {
++       log.Printf("Received a pull request event for #%d\n", event.GetNumber())
++
++       // Create transport with GitHub App authentication
++       tr, err := ghinstallation.New(http.DefaultTransport, appID, event.GetInstallation().GetID(), privateKey)
++       if err != nil {
++               log.Printf("Error creating GitHub App transport: %v\n", err)
++               return
++       }
++
++       client := github.NewClient(&http.Client{Transport: tr})
++
++       // Create comment
++       _, _, err = client.Issues.CreateComment(
++               context.Background(),
++               event.GetRepo().GetOwner().GetLogin(),
++               event.GetRepo().GetName(),
++               event.GetNumber(),
++               &github.IssueComment{
++                       Body: &messageForNewPRs,
++               },
++       )
++       if err != nil {
++               log.Printf("Error creating comment: %v\n", err)
++       }
++}
+
+---
+**File**: run.sh
+**Patch**:
+@@ -0,0 +1,28 @@
++#!/bin/bash
++
++# Load environment variables from .env file
++if [ -f .env ]; then
++  export $(grep -v '^#' .env | xargs)
++else
++  echo ".env file not found."
++  exit 1
++fi
++
++# Check if required variables are set
++if [ -z "$WEBHOOK_URL" ] || [ -z "$TARGET_URL" ]; then
++  echo "WEBHOOK_URL and TARGET_URL must be set in the .env file."
++  exit 1
++fi
++
++echo "Starting Go server..."
++go run main.go &
++GO_PID=$!
++
++sleep 2
++
++echo "Starting Smee client..."
++npx smee-client -u "$WEBHOOK_URL" -t "$TARGET_URL" &
++SMEE_PID=$!
++
++trap "echo 'Stopping...'; kill $GO_PID $SMEE_PID" INT
++wait
+
+---
+Now analyze the code changes and respond with the JSON review object as specified.

@@ -1,0 +1,76 @@
+{
+  "summary": "It's a solid starting point, but there are a few areas that need improvement for robustness, security, and best practices.",
+  "action": "COMMENT",
+  "comments": [
+    {
+      "path": "main.go",
+      "comments": [
+        {
+          "line": { "s": 26, "e": 26 },
+          "body": "Consider making `messageForNewPRs` configurable through an environment variable or configuration file so it can be updated without code changes.",
+          "category": ["readability"]
+        },
+        {
+          "line": { "s": 32, "e": 34 },
+          "body": "You should log the actual error returned from `godotenv.Load()` to make debugging easier.",
+          "category": ["debuggability", "readability"]
+        },
+        {
+          "line": { "s": 84, "e": 86 },
+          "body": "Consider adding logging or metrics for unhandled webhook events to help monitor missed functionality.",
+          "category": ["observability"]
+        },
+        {
+          "line": { "s": 97, "e": 98 },
+          "body": "Using `context.Background()` directly can be problematic for cancellation. Consider passing a proper context from the HTTP handler.",
+          "category": ["performance", "style"]
+        }
+      ]
+    },
+    {
+      "path": "dev.env",
+      "comments": [
+        {
+          "line": { "s": 5, "e": 5 },
+          "body": "Avoid committing `dev.env` with sensitive data placeholders (especially secrets). Prefer `.env.example` with sample or dummy values and gitignore the actual `.env`.",
+          "category": ["security"]
+        }
+      ]
+    },
+    {
+      "path": "run.sh",
+      "comments": [
+        {
+          "line": { "s": 9, "e": 10 },
+          "body": "Add validation to ensure required variables like `APP_ID` and `PRIVATE_KEY_PATH` are also set in the `.env` file.",
+          "category": ["robustness"]
+        },
+        {
+          "line": { "s": 27, "e": 27 },
+          "body": "Consider handling background process failures more gracefully by checking exit codes and logging errors.",
+          "category": ["robustness", "performance"]
+        }
+      ]
+    },
+    {
+      "path": ".gitignore",
+      "comments": [
+        {
+          "line": { "s": 3, "e": 3 },
+          "body": "Add a newline at the end of the file to conform to POSIX standards and avoid unnecessary diffs in future.",
+          "category": ["style", "lint"]
+        }
+      ]
+    },
+    {
+      "path": "go.mod",
+      "comments": [
+        {
+          "line": { "s": 1, "e": 1 },
+          "body": "Typo in module name: `gitub.com` should be `github.com`. This will break Go module resolution.",
+          "category": ["bug"]
+        }
+      ]
+    }
+  ]
+}

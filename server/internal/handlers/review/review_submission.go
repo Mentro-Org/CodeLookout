@@ -1,13 +1,10 @@
 package review
 
 import (
-	"context"
 	"log"
 
-	"github.com/Mentro-Org/CodeLookout/internal/config"
-	ghclient "github.com/Mentro-Org/CodeLookout/internal/github"
-
-	"github.com/google/go-github/github"
+	"github.com/Mentro-Org/CodeLookout/internal/core"
+	"github.com/google/go-github/v72/github"
 )
 
 type ReviewSubmission struct {
@@ -16,8 +13,10 @@ type ReviewSubmission struct {
 	Comments []*github.DraftReviewComment
 }
 
-func (rs *ReviewSubmission) Execute(ctx context.Context, event *github.PullRequestEvent, cfg *config.Config, ghClientFactory *ghclient.ClientFactory) error {
-	client, err := ghClientFactory.GetClient(ctx, event.GetInstallation().GetID())
+func (rs *ReviewSubmission) Execute(reviewCtx *core.ReviewContext) error {
+	event := reviewCtx.Event
+	ctx := reviewCtx.Ctx
+	client, err := reviewCtx.GHClientFactory.GetClient(ctx, event.GetInstallation().GetID())
 	if err != nil {
 		return err
 	}

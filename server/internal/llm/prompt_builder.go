@@ -3,29 +3,64 @@ package llm
 import (
 	"fmt"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v72/github"
 )
 
-// BuildPRReviewPrompt generates a prompt string using PR metadata and the changed files
 func BuildPRReviewPrompt(event *github.PullRequestEvent, files []*github.CommitFile) string {
 	title := event.GetPullRequest().GetTitle()
 	body := event.GetPullRequest().GetBody()
 
-	prompt := fmt.Sprintf(
-		`You're an expert software engineer reviewing a pull request.
+	prompt := fmt.Sprintf(`You are a senior software engineer performing a code review.
 
-Title: %s
-Description: %s
+## PR Metadata
+- **Title**: %s
+- **Description**: %s
 
-Please analyze the following file changes and provide code review feedback:
+## Objective
+Provide structured review feedback based on the following file diffs. The feedback will be used to generate review comments in GitHub.
+
+## Output JSON Format:
+{
+  "summary": "High-level review summary (optional)",
+  "action": "COMMENT | APPROVE | REQUEST_CHANGES",
+  "comments": [
+    {
+      "path": "file/path.go",
+      "comments": [
+        {
+          "line": { "s": 12, "e": 14 },
+          "body": "Feedback for this line range",
+          "category": ["security", "performance"]
+        },
+        {
+          "line": { "s": 30, "e": 30 },
+          "body": "Single-line comment",
+          "category": ["style"]
+        }
+      ]
+    }
+  ]
+}
+
+- Use { "s": x, "e": y } to represent line ranges. If it's one line, make s == e.
+- Categories can include: "security", "performance", "bug", "style", "readability", "lint", etc.
+- Be concise, helpful, and professional.
+
 `, title, body)
 
 	for _, f := range files {
-		filename := f.GetFilename()
-		patch := f.GetPatch()
-		prompt += fmt.Sprintf("\nFile: %s\nDiff:\n%s\n", filename, patch)
+		prompt += fmt.Sprintf(`
+
+---
+**File**: %s
+**Patch**:
+%s`, f.GetFilename(), f.GetPatch())
 	}
 
-	prompt += "\nRespond with helpful review comments, suggested improvements, and bugs if any. Be concise and clear."
+	prompt += `
+
+---
+Now analyze the code changes and respond with the JSON review object as specified.`
+
 	return prompt
 }

@@ -22,7 +22,8 @@ func NewRouter(cfg *config.Config, ghClientFactory *ghclient.ClientFactory, aiCl
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("ok"))
 		})
-		r.Post("/webhook", handlers.WebhookHandler(cfg, ghClientFactory, aiClient))
+		service := handlers.NewWebhookHandlerService(cfg, ghClientFactory, aiClient)
+		r.Post("/webhook", service.HandleWebhook())
 	})
 
 	return r

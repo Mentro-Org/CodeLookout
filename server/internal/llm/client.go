@@ -2,6 +2,10 @@ package llm
 
 import (
 	"context"
+	"io"
+	"log"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/Mentro-Org/CodeLookout/internal/config"
@@ -9,7 +13,8 @@ import (
 )
 
 type AIClient interface {
-	ReviewPR(ctx context.Context, prompt string) (string, error)
+	GenerateReviewForPR(ctx context.Context, prompt string) (string, error)
+	GenerateSampleReviewForPR() (string, error)
 }
 
 type OpenAIClient struct {
@@ -31,7 +36,7 @@ func NewOpenAIClient(cfg *config.Config) *OpenAIClient {
 	return instance
 }
 
-func (c *OpenAIClient) ReviewPR(ctx context.Context, prompt string) (string, error) {
+func (c *OpenAIClient) GenerateReviewForPR(ctx context.Context, prompt string) (string, error) {
 	resp, err := c.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 		Model: c.model,
 		Messages: []openai.ChatCompletionMessage{
@@ -44,4 +49,22 @@ func (c *OpenAIClient) ReviewPR(ctx context.Context, prompt string) (string, err
 	}
 
 	return resp.Choices[0].Message.Content, nil
+}
+
+// use this for development(no need to call AI API to get review json)
+func (c *OpenAIClient) GenerateSampleReviewForPR() (string, error) {
+	rootDir, _ := os.Getwd()
+	jsonPath := filepath.Join(rootDir, "data", "openai-review.json")
+	file, err := os.Open(jsonPath)
+	if err != nil {
+		log.Fatalf("Failed to open file: %v", err)
+	}
+	defer file.Close()
+
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		log.Fatalf("Failed to read file: %v", err)
+	}
+
+	return string(bytes), nil
 }
