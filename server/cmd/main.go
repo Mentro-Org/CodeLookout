@@ -21,7 +21,10 @@ func main() {
 
 	cfg := config.Load()
 	ghClientFactory := githubclient.NewClientFactory(cfg)
-	aiClient := llm.NewOpenAIClient(cfg)
+	aiClient, err := llm.NewClient(cfg)
+	if err != nil {
+		log.Fatalf("Failed to get an AI Client %v", err)
+	}
 
 	// Setup router
 	r := api.NewRouter(cfg, ghClientFactory, aiClient)

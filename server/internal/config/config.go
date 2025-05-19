@@ -11,6 +11,7 @@ type Config struct {
 	Port        string `envconfig:"PORT" default:"8080"`
 	AppEnv      string `envconfig:"APP_ENV" default:"development"`
 	GithubAppID int64  `envconfig:"GITHUB_APP_ID" required:"true"`
+	AIProvider  string `envconfig:"AI_PROVIDER" required:"true"`
 	OpenAIKey   string `envconfig:"OPENAI_API_KEY" required:"true"`
 	DatabaseURL string `envconfig:"DATABASE_URL" required:"true"`
 	QueueSize   int    `envconfig:"QUEUE_SIZE" default:"100"`
