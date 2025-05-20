@@ -14,9 +14,9 @@ type PullRequestOpenedHandler struct {
 	Cfg             *config.Config
 	AIClient        llm.AIClient
 	GHClientFactory *ghclient.ClientFactory
-	DB               *pgxpool.Pool
+	DBPool          *pgxpool.Pool
 }
 
 func (h *PullRequestOpenedHandler) Handle(ctx context.Context, event *github.PullRequestEvent) error {
-	return HandleReviewForPR(ctx, event, h.Cfg, h.GHClientFactory, h.AIClient, h.DB)
+	return HandleReviewForPR(ctx, event, h.Cfg, h.GHClientFactory, h.AIClient, h.DBPool)
 }

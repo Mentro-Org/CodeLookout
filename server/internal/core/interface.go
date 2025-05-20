@@ -22,5 +22,5 @@ type ReviewContext struct {
 	Event           *github.PullRequestEvent
 	Cfg             *config.Config
 	GHClientFactory *ghclient.ClientFactory
-	DB              *pgxpool.Pool 
+	DBPool          *pgxpool.Pool
 }

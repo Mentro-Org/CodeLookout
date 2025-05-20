@@ -1,18 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"context"
 
 	"github.com/Mentro-Org/CodeLookout/internal/api"
 	"github.com/Mentro-Org/CodeLookout/internal/config"
+	"github.com/Mentro-Org/CodeLookout/internal/db"
 	githubclient "github.com/Mentro-Org/CodeLookout/internal/github"
 	"github.com/Mentro-Org/CodeLookout/internal/llm"
 	"github.com/joho/godotenv"
-	"github.com/Mentro-Org/CodeLookout/internal/db"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 	}
 
 	cfg := config.Load()
-	
+
 	ctx := context.Background()
 	// Connect to the database
 	// Initialize the database connection
@@ -33,12 +33,11 @@ func main() {
 	}
 	log.Println("Successfully connected to the database")
 
-
 	ghClientFactory := githubclient.NewClientFactory(cfg)
 	aiClient := llm.NewOpenAIClient(cfg)
 
 	// Setup router
-	r := api.NewRouter(cfg, ghClientFactory, aiClient,dbPool)
+	r := api.NewRouter(cfg, ghClientFactory, aiClient, dbPool)
 
 	// Start server
 	addr := fmt.Sprintf(":%s", cfg.Port)
