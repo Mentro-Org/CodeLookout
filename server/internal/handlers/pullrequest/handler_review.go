@@ -9,9 +9,10 @@ import (
 	"github.com/Mentro-Org/CodeLookout/internal/handlers/review"
 	"github.com/Mentro-Org/CodeLookout/internal/llm"
 	"github.com/google/go-github/v72/github"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func HandleReviewForPR(ctx context.Context, event *github.PullRequestEvent, cfg *config.Config, ghClientFactory *ghclient.ClientFactory, aIClient llm.AIClient) error {
+func HandleReviewForPR(ctx context.Context, event *github.PullRequestEvent, cfg *config.Config, ghClientFactory *ghclient.ClientFactory, aIClient llm.AIClient, dbPool *pgxpool.Pool) error {
 	log.Printf("Received a pull request event for #%d\n", event.GetNumber())
 	// Get GitHub client
 	client, err := ghClientFactory.GetClient(ctx, event.GetInstallation().GetID())

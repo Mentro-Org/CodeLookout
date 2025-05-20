@@ -6,6 +6,7 @@ import (
 	"github.com/Mentro-Org/CodeLookout/internal/config"
 	ghclient "github.com/Mentro-Org/CodeLookout/internal/github"
 	"github.com/google/go-github/v72/github"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PullRequestHandler interface {
@@ -21,4 +22,5 @@ type ReviewContext struct {
 	Event           *github.PullRequestEvent
 	Cfg             *config.Config
 	GHClientFactory *ghclient.ClientFactory
+	DBPool          *pgxpool.Pool
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/Mentro-Org/CodeLookout/internal/api"
 	"github.com/Mentro-Org/CodeLookout/internal/config"
+	"github.com/Mentro-Org/CodeLookout/internal/db"
 	githubclient "github.com/Mentro-Org/CodeLookout/internal/github"
 	"github.com/Mentro-Org/CodeLookout/internal/llm"
 	"github.com/joho/godotenv"
@@ -20,6 +22,17 @@ func main() {
 	}
 
 	cfg := config.Load()
+
+	ctx := context.Background()
+	// Connect to the database
+	// Initialize the database connection
+	dbPool := db.ConnectDB(ctx, cfg)
+	defer dbPool.Close()
+	if err := dbPool.Ping(ctx); err != nil {
+		log.Fatalf("Failed to connect to the database: %v", err)
+	}
+	log.Println("Successfully connected to the database")
+
 	ghClientFactory := githubclient.NewClientFactory(cfg)
 	aiClient, err := llm.NewClient(cfg)
 	if err != nil {
@@ -27,7 +40,7 @@ func main() {
 	}
 
 	// Setup router
-	r := api.NewRouter(cfg, ghClientFactory, aiClient)
+	r := api.NewRouter(cfg, ghClientFactory, aiClient, dbPool)
 
 	// Start server
 	addr := fmt.Sprintf(":%s", cfg.Port)
