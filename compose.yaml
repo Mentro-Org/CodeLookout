@@ -1,0 +1,51 @@
+---
+services:
+  golang:
+    image: codelookout/glang:latest
+    build:
+      context: server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+       - path: ./server/.dev.env
+         required: true
+    volumes:
+      - ./private-key-path:/app/private-key-path
+    environment:
+      GITHUB_APP_PRIVATE_KEY_PATH : /app/private-key-path
+    networks:
+      - private
+  
+  postgres:
+    image: postgres:16.3
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_DB: mydb
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
+    secrets:
+      - pg_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - private
+
+secrets:
+  pg_password:
+    file: 'file-path'
+  # github_app_private_key:
+  #   file: filenamepath
+
+volumes:
+  postgres-data:
+
+networks:
+  private:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "10.0.0.0/19"
+          gateway: "10.0.0.1"
+
