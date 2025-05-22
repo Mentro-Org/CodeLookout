@@ -14,12 +14,6 @@ if [ -z "$DEV_WEBHOOK_URL" ] || [ -z "$TARGET_URL" ]; then
   exit 1
 fi
 
-echo "Starting Go server..."
-go run cmd/main.go &
-GO_PID=$!
-
-sleep 2
-
 echo "Starting Smee client..."
 npx smee-client -u "$DEV_WEBHOOK_URL" -t "$TARGET_URL" &
 SMEE_PID=$!

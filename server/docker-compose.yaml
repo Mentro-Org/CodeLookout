@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:16.3
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: codelookout
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - codelookout
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./your_githubapp.private-key.pem:/app/your_githubapp.private-key.pem:ro
+    environment:
+      GITHUB_APP_PRIVATE_KEY_PATH: /app/your_githubapp.private-key.pem
+    env_file:
+      - .env
+    depends_on:
+      - postgres-db
+    networks:
+      - codelookout
+
+volumes:
+  postgres-data:
+
+networks:
+  codelookout:
+    driver: bridge

@@ -1,17 +1,38 @@
-## Step1: Create a github App for local development
+## Create a github App for local development
 
 - Use the following [link](https://docs.github.com/en/apps/creating-github-apps/writing-code-for-a-github-app/quickstart) for reference
 
 - Start following from Step 2 (as we have Go app instead of nodeJS one)
 
-## Step2: Run local developement server
+## Run local developement server
+
+- Using docker:
 
 ```shell
-  chmod +x run.sh
-  ./run.sh
+  docker-compose up
+  # run smee client
+  ./scripts/run_smeeclient.sh
+```
+
+- Non docker:
+  `go run cmd/main.go`
+
+```shell
+  cd server
+  go run cmd/main.go
+  # run smee client
+  ./scripts/run_smeeclient.sh
 ```
 
 > Run this smee client to forward github webhooks to development machine
+
+## Update DATABASE_URL when switching bewteen docker and non-docker development
+
+- Use localhost in DATABASE_URL for local dev
+  - `postgres://postgres:password@localhost:5432/codelookout`
+- Use postgres-db in DATABASE_URL for Docker
+  - `postgres://postgres:password@postgres-db:5432/codelookout`
+- Ensure the private key is mounted into the container when using Docker
 
 ## What `data` folder contains ?
 
