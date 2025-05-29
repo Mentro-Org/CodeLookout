@@ -4,24 +4,21 @@ import (
 	"context"
 	"log"
 
-	"github.com/Mentro-Org/CodeLookout/internal/config"
 	"github.com/Mentro-Org/CodeLookout/internal/core"
-	ghclient "github.com/Mentro-Org/CodeLookout/internal/github"
 	"github.com/Mentro-Org/CodeLookout/internal/llm"
-	"github.com/google/go-github/v72/github"
+	"github.com/Mentro-Org/CodeLookout/internal/queue"
 )
 
-func HandleReviewResponseFromAI(ctx context.Context, event *github.PullRequestEvent, cfg *config.Config, ghClientFactory *ghclient.ClientFactory, aiJsonResponse string) error {
+func HandleReviewResponseFromAI(ctx context.Context, payload queue.PRReviewTaskPayload, appDeps *core.AppDeps, aiJsonResponse string) error {
 	reviewResp, err := llm.ParseReviewResponse(aiJsonResponse)
 	if err != nil {
 		return err
 	}
 
 	reviewCtx := core.ReviewContext{
-		Ctx:             ctx,
-		Event:           event,
-		Cfg:             cfg,
-		GHClientFactory: ghClientFactory,
+		Ctx:     ctx,
+		Payload: payload,
+		AppDeps: appDeps,
 	}
 
 	// Inline comments (multi-line support)

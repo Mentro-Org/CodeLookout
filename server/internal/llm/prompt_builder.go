@@ -3,12 +3,13 @@ package llm
 import (
 	"fmt"
 
+	"github.com/Mentro-Org/CodeLookout/internal/queue"
 	"github.com/google/go-github/v72/github"
 )
 
-func BuildPRReviewPrompt(event *github.PullRequestEvent, files []*github.CommitFile) string {
-	title := event.GetPullRequest().GetTitle()
-	body := event.GetPullRequest().GetBody()
+func BuildPRReviewPrompt(payload *queue.PRReviewTaskPayload, files []*github.CommitFile) string {
+	title := payload.Title
+	body := payload.Body
 
 	prompt := fmt.Sprintf(`You are a senior software engineer performing a code review.
 

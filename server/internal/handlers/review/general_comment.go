@@ -12,20 +12,19 @@ type GeneralComment struct {
 }
 
 func (gc *GeneralComment) Execute(reviewCtx *core.ReviewContext) error {
-	event := reviewCtx.Event
 	ctx := reviewCtx.Ctx
-	log.Printf("Received a pull request event for #%d\n", event.GetNumber())
+	log.Printf("Received a pull request event for #%d\n", reviewCtx.Payload.PRNumber)
 
-	client, err := reviewCtx.GHClientFactory.GetClient(ctx, event.GetInstallation().GetID())
+	client, err := reviewCtx.AppDeps.GHClientFactory.GetClient(ctx, reviewCtx.Payload.InstallationID)
 	if err != nil {
 		return err
 	}
 
 	_, _, err = client.Issues.CreateComment(
 		ctx,
-		event.GetRepo().GetOwner().GetLogin(),
-		event.GetRepo().GetName(),
-		event.GetNumber(),
+		reviewCtx.Payload.Owner,
+		reviewCtx.Payload.Repo,
+		reviewCtx.Payload.PRNumber,
 		&github.IssueComment{Body: &gc.Message},
 	)
 
