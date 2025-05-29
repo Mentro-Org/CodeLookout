@@ -3,16 +3,13 @@ package api
 import (
 	"net/http"
 
-	"github.com/Mentro-Org/CodeLookout/internal/config"
-	ghclient "github.com/Mentro-Org/CodeLookout/internal/github"
+	"github.com/Mentro-Org/CodeLookout/internal/core"
 	"github.com/Mentro-Org/CodeLookout/internal/handlers"
-	"github.com/Mentro-Org/CodeLookout/internal/llm"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewRouter(cfg *config.Config, ghClientFactory *ghclient.ClientFactory, aiClient llm.AIClient, dbPool *pgxpool.Pool) http.Handler {
+func NewRouter(appDeps core.AppDeps) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -22,8 +19,7 @@ func NewRouter(cfg *config.Config, ghClientFactory *ghclient.ClientFactory, aiCl
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("ok"))
 		})
-		service := handlers.NewWebhookHandlerService(cfg, ghClientFactory, aiClient, dbPool)
-		r.Post("/webhook", service.HandleWebhook())
+		r.Post("/webhook", handlers.HandleWebhook(appDeps))
 	})
 
 	return r

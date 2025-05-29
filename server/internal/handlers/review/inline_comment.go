@@ -16,18 +16,15 @@ type InlineComment struct {
 }
 
 func (ic *InlineComment) Execute(reviewCtx *core.ReviewContext) error {
-	event := reviewCtx.Event
 	ctx := reviewCtx.Ctx
-	client, err := reviewCtx.GHClientFactory.GetClient(ctx, event.GetInstallation().GetID())
+	client, err := reviewCtx.AppDeps.GHClientFactory.GetClient(ctx, reviewCtx.Payload.InstallationID)
 	if err != nil {
 		return err
 	}
 
-	commitSHA := event.GetPullRequest().GetHead().GetSHA()
-
 	comment := &github.PullRequestComment{
 		Body:     github.Ptr(ic.Body),
-		CommitID: github.Ptr(commitSHA),
+		CommitID: github.Ptr(reviewCtx.Payload.CommitSHA),
 		Path:     github.Ptr(ic.Path),
 	}
 
@@ -43,9 +40,9 @@ func (ic *InlineComment) Execute(reviewCtx *core.ReviewContext) error {
 	}
 
 	_, _, err = client.PullRequests.CreateComment(ctx,
-		event.GetRepo().GetOwner().GetLogin(),
-		event.GetRepo().GetName(),
-		event.GetNumber(),
+		reviewCtx.Payload.Owner,
+		reviewCtx.Payload.Repo,
+		reviewCtx.Payload.PRNumber,
 		comment,
 	)
 

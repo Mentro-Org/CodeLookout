@@ -8,20 +8,20 @@ import (
 )
 
 type Config struct {
-	Port        string `envconfig:"PORT" default:"8080"`
-	AppEnv      string `envconfig:"APP_ENV" default:"development"`
-	GithubAppID int64  `envconfig:"GITHUB_APP_ID" required:"true"`
-	AIProvider  string `envconfig:"AI_PROVIDER" required:"true"`
-	OpenAIKey   string `envconfig:"OPENAI_API_KEY" required:"true"`
-	DatabaseURL string `envconfig:"DATABASE_URL" required:"true"`
-	QueueSize   int    `envconfig:"QUEUE_SIZE" default:"100"`
+	Port              string `envconfig:"PORT" default:"8080"`
+	AppEnv            string `envconfig:"APP_ENV" default:"development"`
+	GithubAppID       int64  `envconfig:"GITHUB_APP_ID" required:"true"`
+	AIProvider        string `envconfig:"AI_PROVIDER" required:"true"`
+	OpenAIKey         string `envconfig:"OPENAI_API_KEY" required:"true"`
+	DatabaseURL       string `envconfig:"DATABASE_URL" required:"true"`
+	RedisAddress      string `envconfig:"REDIS_ADDRESS" required:"true"`
+	WorkerConcurrency int    `envconfig:"WORKER_CONCURRENCY" required:"true"`
+	QueueSize         int    `envconfig:"QUEUE_SIZE" default:"100"`
 
 	WebhookSecret           string `envconfig:"WEBHOOK_SECRET" required:"true"`
 	GithubAppPrivateKeyPath string `envconfig:"GITHUB_APP_PRIVATE_KEY_PATH" required:"true"`
 
 	GithubAppPrivateKey []byte `ignored:"true"` // not from env
-
-	MessageForNewPRs string `ignored:"true"`
 }
 
 func Load() *Config {
@@ -36,7 +36,6 @@ func Load() *Config {
 		log.Fatalf("Failed to read private key at %s: %v", cfg.GithubAppPrivateKeyPath, err)
 	}
 	cfg.GithubAppPrivateKey = privateKeyPEM
-	cfg.MessageForNewPRs = "Thanks for opening a new PR! Please follow our contributing guidelines to make your PR easier to review."
 
 	return &cfg
 }

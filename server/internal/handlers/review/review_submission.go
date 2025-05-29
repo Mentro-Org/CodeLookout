@@ -14,9 +14,8 @@ type ReviewSubmission struct {
 }
 
 func (rs *ReviewSubmission) Execute(reviewCtx *core.ReviewContext) error {
-	event := reviewCtx.Event
 	ctx := reviewCtx.Ctx
-	client, err := reviewCtx.GHClientFactory.GetClient(ctx, event.GetInstallation().GetID())
+	client, err := reviewCtx.AppDeps.GHClientFactory.GetClient(ctx, reviewCtx.Payload.InstallationID)
 	if err != nil {
 		return err
 	}
@@ -28,9 +27,9 @@ func (rs *ReviewSubmission) Execute(reviewCtx *core.ReviewContext) error {
 	}
 
 	_, _, err = client.PullRequests.CreateReview(ctx,
-		event.GetRepo().GetOwner().GetLogin(),
-		event.GetRepo().GetName(),
-		event.GetNumber(),
+		reviewCtx.Payload.Owner,
+		reviewCtx.Payload.Repo,
+		reviewCtx.Payload.PRNumber,
 		review,
 	)
 
