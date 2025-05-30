@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(appDeps core.AppDeps) http.Handler {
+func NewRouter(appDeps *core.AppDeps) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)

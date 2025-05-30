@@ -43,13 +43,11 @@ func HandleReviewForPR(ctx context.Context, t *asynq.Task, appDeps *core.AppDeps
 
 	var response string
 	if appDeps.Config.AppEnv == "development" {
-		// comment this out when pushing code
 		response, err = appDeps.AIClient.GenerateSampleReviewForPR()
 		if err != nil {
 			return err
 		}
 	} else {
-		// Call OpenAI with this prompt
 		response, err = appDeps.AIClient.GenerateReviewForPR(ctx, promptText)
 		if err != nil {
 			return err

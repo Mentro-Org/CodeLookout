@@ -53,7 +53,7 @@ func startServer(ctx context.Context, deps *core.AppDeps) error {
 	address := fmt.Sprintf(":%s", deps.Config.Port)
 	srv := http.Server{
 		Addr:    address,
-		Handler: api.NewRouter(*deps),
+		Handler: api.NewRouter(deps),
 	}
 
 	go func() {

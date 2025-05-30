@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-github/v72/github"
 )
 
-func HandleWebhook(appDeps core.AppDeps) http.HandlerFunc {
+func HandleWebhook(appDeps *core.AppDeps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		payload, err := github.ValidatePayload(r, []byte(appDeps.Config.WebhookSecret))
 		if err != nil {
