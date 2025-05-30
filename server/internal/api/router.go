@@ -2,7 +2,7 @@ package api
 
 import (
 	"net/http"
-
+"log"
 	"github.com/Mentro-Org/CodeLookout/internal/config"
 	ghclient "github.com/Mentro-Org/CodeLookout/internal/github"
 	"github.com/Mentro-Org/CodeLookout/internal/handlers"
@@ -20,11 +20,9 @@ func NewRouter(cfg *config.Config, ghClientFactory *ghclient.ClientFactory, aiCl
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/health-check", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("ok"))
 		})
 		service := handlers.NewWebhookHandlerService(cfg, ghClientFactory, aiClient, dbPool)
 		r.Post("/webhook", service.HandleWebhook())
 	})
-
 	return r
 }
