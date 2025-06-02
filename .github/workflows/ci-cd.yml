@@ -1,0 +1,62 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    if: github.event_name != 'push' || !startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '^1.20'
+      - name: Cache golangci-lint
+        uses: actions/cache@v3
+        with:
+          path: ~/golangci-lint
+          key: ${{ runner.os }}-golangci-lint-${{ hashFiles('**/go.mod', '**/go.sum') }}
+
+      - name: Install golangci-lint
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s latest
+          sudo mv ./bin/golangci-lint /usr/local/bin/
+        working-directory: server
+
+      - name: Lint
+        run: golangci-lint run ./...
+        working-directory: server
+      
+      
+      - name: Test
+        run: go test ./...
+        working-directory: server
+
+      
+      - name: Build
+        run: go build ./...
+        working-directory: server
+
+  cd:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '^1.20'
+      - name: Build release binary
+        run: go build -o build/app
+        working-directory: server
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-binaries
+          path: server/build/ 
