@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Mentro-Org/CodeLookout/internal/config"
+	// pgxpool provides a PostgreSQL connection pool based on the pgx driver.
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

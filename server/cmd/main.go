@@ -27,10 +27,6 @@ func initializeDependencies() (*core.AppDeps, error) {
 	ctx := context.Background()
 
 	dbPool := db.ConnectDB(ctx, cfg)
-	if err := dbPool.Ping(ctx); err != nil {
-		return nil, fmt.Errorf("db ping failed: %w", err)
-	}
-
 	ghClientFactory := githubclient.NewClientFactory(cfg)
 
 	aiClient, err := llm.NewClient(cfg)
