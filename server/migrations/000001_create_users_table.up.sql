@@ -1,7 +1,9 @@
--- This is a sample migration file for testing
-
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL
+    id VARCHAR PRIMARY KEY,
+    username VARCHAR,
+    email VARCHAR,
+    password_hash VARCHAR,
+    role VARCHAR,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
 );
